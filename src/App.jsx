@@ -16,6 +16,10 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [stats, setStats] = useState({ movies: "—", dialogues: "—", pending: "—" });
+
+  // Admin access check
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = currentUser && adminEmails.includes(currentUser.email?.toLowerCase());
   const [showAddMovie, setShowAddMovie] = useState(false);
   const [showAddDialogue, setShowAddDialogue] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -93,7 +97,9 @@ function App() {
           <div className="hero-actions">
             <button className="primary" onClick={handleAddMovie}>Add a movie</button>
             <button className="ghost" onClick={handleAddDialogue}>Submit a dialogue</button>
-            <button className="ghost" onClick={() => setShowAdmin(true)}>See pending queue</button>
+            {isAdmin && (
+              <button className="ghost" onClick={() => setShowAdmin(true)}>See pending queue</button>
+            )}
           </div>
         </div>
         <div className="summary-card">
