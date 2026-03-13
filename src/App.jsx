@@ -1,59 +1,83 @@
+import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import MovieCard from "./components/MovieCard";
+import AddMovieModal from "./components/AddMovieModal";
+import AddDialogueModal from "./components/AddDialogueModal";
+import ViewDialoguesModal from "./components/ViewDialoguesModal";
+import AdminPanel from "./components/AdminPanel";
+import { useAuth } from "./contexts/AuthContext";
+import { isFirebaseConfigured } from "./firebase";
+import { getApprovedMovies, getApprovedMovieCount, getPendingMovieCount } from "./services/movieService";
+import { getTotalDialogueCount } from "./services/dialogueService";
 import "./App.css";
 
-const mockMovies = [
-  {
-    id: 1,
-    title: "Inception",
-    banner:
-      "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=800&q=80",
-    category: "Serious",
-    dialogueCount: 18,
-  },
-  {
-    id: 2,
-    title: "Titanic",
-    banner:
-      "https://images.unsplash.com/photo-1523760957529-cd03912a8b1a?auto=format&fit=crop&w=800&q=80",
-    category: "Romantic",
-    dialogueCount: 22,
-  },
-  {
-    id: 3,
-    title: "The Dark Knight",
-    banner:
-      "https://images.unsplash.com/photo-1502139214982-d0ad755818d8?auto=format&fit=crop&w=800&q=80",
-    category: "Motivation",
-    dialogueCount: 15,
-  },
-  {
-    id: 4,
-    title: "Deadpool",
-    banner:
-      "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=800&q=80",
-    category: "Funny",
-    dialogueCount: 27,
-  },
-  {
-    id: 5,
-    title: "Get Out",
-    banner:
-      "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=800&q=80",
-    category: "Horror",
-    dialogueCount: 9,
-  },
-  {
-    id: 6,
-    title: "Interstellar",
-    banner:
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80",
-    category: "Serious",
-    dialogueCount: 19,
-  },
-];
-
 function App() {
+  const { currentUser, signInWithGoogle } = useAuth();
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(isFirebaseConfigured);
+  const [stats, setStats] = useState({ movies: "—", dialogues: "—", pending: "—" });
+  const [showAddMovie, setShowAddMovie] = useState(false);
+  const [showAddDialogue, setShowAddDialogue] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [viewingMovie, setViewingMovie] = useState(null); // { id, name }
+  const [dialogueMovieId, setDialogueMovieId] = useState(""); // pre-selected movie for AddDialogueModal
+
+  // Fetch approved movies from Firestore
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    try {
+      const [movieList, movieCount, dialogueCount, pendingCount] = await Promise.all([
+        getApprovedMovies(),
+        getApprovedMovieCount(),
+        getTotalDialogueCount(),
+        getPendingMovieCount(),
+      ]);
+      setMovies(movieList);
+      setStats({
+        movies: movieCount,
+        dialogues: dialogueCount > 0 ? `${dialogueCount}` : "0",
+        pending: pendingCount,
+      });
+    } catch (err) {
+      console.error("Failed to fetch movies:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+    }
+  }
+
+  function handleAddMovie() {
+    if (!currentUser) {
+      alert("Please log in first to add a movie.");
+      return;
+    }
+    setShowAddMovie(true);
+  }
+
+  function handleAddDialogue(preselectedId) {
+    if (!currentUser) {
+      alert("Please log in first to submit a dialogue.");
+      return;
+    }
+    setDialogueMovieId(preselectedId || "");
+    setShowAddDialogue(true);
+  }
+
+  function handleViewDialogues(movieId, movieName) {
+    setViewingMovie({ id: movieId, name: movieName });
+  }
+
   return (
     <div className="page">
       <Navbar />
@@ -67,23 +91,23 @@ function App() {
             quality high. Start by searching or exploring popular titles.
           </p>
           <div className="hero-actions">
-            <button className="primary">Add a movie</button>
-            <button className="ghost">Submit a dialogue</button>
-            <button className="ghost">See pending queue</button>
+            <button className="primary" onClick={handleAddMovie}>Add a movie</button>
+            <button className="ghost" onClick={handleAddDialogue}>Submit a dialogue</button>
+            <button className="ghost" onClick={() => setShowAdmin(true)}>See pending queue</button>
           </div>
         </div>
         <div className="summary-card">
           <div className="summary-row">
             <span className="label">Movies</span>
-            <strong>24</strong>
+            <strong>{stats.movies}</strong>
           </div>
           <div className="summary-row">
             <span className="label">Dialogues</span>
-            <strong>180+</strong>
+            <strong>{stats.dialogues}</strong>
           </div>
           <div className="summary-row">
             <span className="label">Pending approval</span>
-            <strong>6</strong>
+            <strong>{stats.pending}</strong>
           </div>
         </div>
       </header>
@@ -97,15 +121,26 @@ function App() {
       </section>
 
       <section className="grid">
-        {mockMovies.map((movie) => (
-          <MovieCard
-            key={movie.id}
-            title={movie.title}
-            banner={movie.banner}
-            category={movie.category}
-            dialogueCount={movie.dialogueCount}
-          />
-        ))}
+        {loading ? (
+          <p className="loading-text">Loading movies…</p>
+        ) : movies.length > 0 ? (
+          movies.map((movie) => (
+            <MovieCard
+              key={movie.id}
+              id={movie.id}
+              movieName={movie.movieName}
+              bannerURL={movie.bannerURL}
+              category={movie.category}
+              dialogueCount={movie.dialogueCount}
+              onViewDialogues={handleViewDialogues}
+              onAddDialogue={(movieId) => handleAddDialogue(movieId)}
+            />
+          ))
+        ) : (
+          <p className="empty-text">
+            No movies yet. Be the first to add one!
+          </p>
+        )}
       </section>
 
       <section className="cta">
@@ -114,10 +149,46 @@ function App() {
           <p>Sign in with Google to submit a movie or dialogue. Admins will review quickly.</p>
         </div>
         <div className="cta-actions">
-          <button className="primary">Log in with Google</button>
+          {currentUser ? (
+            <button className="primary" disabled>You're signed in ✓</button>
+          ) : (
+            <button className="primary" onClick={handleGoogleLogin}>Log in with Google</button>
+          )}
           <button className="ghost">See contribution guide</button>
         </div>
       </section>
+
+      {/* Modals */}
+      {showAddMovie && (
+        <AddMovieModal
+          onClose={() => setShowAddMovie(false)}
+          onMovieAdded={() => fetchData()}
+        />
+      )}
+      {showAddDialogue && (
+        <AddDialogueModal
+          onClose={() => { setShowAddDialogue(false); setDialogueMovieId(""); }}
+          onDialogueAdded={() => fetchData()}
+          preselectedMovieId={dialogueMovieId}
+        />
+      )}
+      {viewingMovie && (
+        <ViewDialoguesModal
+          movieId={viewingMovie.id}
+          movieName={viewingMovie.name}
+          onClose={() => setViewingMovie(null)}
+          onAddDialogue={() => {
+            setViewingMovie(null);
+            handleAddDialogue(viewingMovie.id);
+          }}
+        />
+      )}
+      {showAdmin && (
+        <AdminPanel
+          onClose={() => setShowAdmin(false)}
+          onContentChanged={() => fetchData()}
+        />
+      )}
     </div>
   );
 }
