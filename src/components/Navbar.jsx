@@ -2,15 +2,29 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "./LoginModal";
 import SignUpModal from "./SignUpModal";
+import FavouritesModal from "./FavouritesModal";
 import "./Navbar.css";
 
-const Navbar = () => {
+const Navbar = ({ onSearch }) => {
   const { currentUser, logout } = useAuth();
-  const [modal, setModal] = useState(null); // null | "login" | "signup"
+  const [modal, setModal] = useState(null); // null | "login" | "signup" | "favourites"
 
   function openLogin() { setModal("login"); }
   function openSignUp() { setModal("signup"); }
   function closeModal() { setModal(null); }
+
+  function handleFavourites() {
+    if (!currentUser) {
+      alert("Please log in to see your favourites.");
+      openLogin();
+      return;
+    }
+    setModal("favourites");
+  }
+
+  function handleSearchChange(e) {
+    if (onSearch) onSearch(e.target.value);
+  }
 
   return (
     <>
@@ -22,15 +36,17 @@ const Navbar = () => {
         <div className="nav-center">
           <input
             type="text"
-            placeholder="Search by movie or dialogue"
+            placeholder="Search by movie or series name"
             className="search"
-            aria-label="Search movies or dialogues"
+            aria-label="Search movies"
+            onChange={handleSearchChange}
           />
         </div>
 
         <div className="nav-right">
-          <button className="pro-btn" type="button">Favourite</button>
-          <button className="submit-btn" type="button">Practice</button>
+          <button className="fav-nav-btn" type="button" onClick={handleFavourites}>
+            ⭐ Favourites
+          </button>
 
           {currentUser ? (
             <>
@@ -67,6 +83,9 @@ const Navbar = () => {
       )}
       {modal === "signup" && (
         <SignUpModal onClose={closeModal} onSwitchToLogin={() => setModal("login")} />
+      )}
+      {modal === "favourites" && (
+        <FavouritesModal onClose={closeModal} />
       )}
     </>
   );

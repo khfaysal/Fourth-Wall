@@ -8,7 +8,7 @@ import AdminPanel from "./components/AdminPanel";
 import { useAuth } from "./contexts/AuthContext";
 import { isFirebaseConfigured } from "./firebase";
 import { getApprovedMovies, getApprovedMovieCount, getPendingMovieCount } from "./services/movieService";
-import { getTotalDialogueCount } from "./services/dialogueService";
+import { getTotalDialogueCount, getDialogueCountForMovie } from "./services/dialogueService";
 import "./App.css";
 
 function App() {
@@ -16,6 +16,7 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [stats, setStats] = useState({ movies: "—", dialogues: "—", pending: "—" });
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Admin access check
   const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
@@ -38,9 +39,22 @@ function App() {
         getApprovedMovies(),
         getApprovedMovieCount(),
         getTotalDialogueCount(),
-        getPendingMovieCount(),
+        isAdmin ? getPendingMovieCount() : Promise.resolve(0),
       ]);
-      setMovies(movieList);
+
+      // Enrich each movie with its individual dialogue count
+      const enriched = await Promise.all(
+        movieList.map(async (movie) => {
+          try {
+            const count = await getDialogueCountForMovie(movie.id);
+            return { ...movie, dialogueCount: count };
+          } catch {
+            return { ...movie, dialogueCount: 0 };
+          }
+        })
+      );
+
+      setMovies(enriched);
       setStats({
         movies: movieCount,
         dialogues: dialogueCount > 0 ? `${dialogueCount}` : "0",
@@ -82,9 +96,16 @@ function App() {
     setViewingMovie({ id: movieId, name: movieName });
   }
 
+  // Client-side search filter by movie name
+  const filteredMovies = searchQuery.trim()
+    ? movies.filter((m) =>
+        (m.movieName || "").toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : movies;
+
   return (
     <div className="page">
-      <Navbar />
+      <Navbar onSearch={setSearchQuery} />
 
       <header className="hero">
         <div>
@@ -111,10 +132,12 @@ function App() {
             <span className="label">Dialogues</span>
             <strong>{stats.dialogues}</strong>
           </div>
-          <div className="summary-row">
-            <span className="label">Pending approval</span>
-            <strong>{stats.pending}</strong>
-          </div>
+          {isAdmin && (
+            <div className="summary-row">
+              <span className="label">Pending approval</span>
+              <strong>{stats.pending}</strong>
+            </div>
+          )}
         </div>
       </header>
 
@@ -129,8 +152,8 @@ function App() {
       <section className="grid">
         {loading ? (
           <p className="loading-text">Loading movies…</p>
-        ) : movies.length > 0 ? (
-          movies.map((movie) => (
+        ) : filteredMovies.length > 0 ? (
+          filteredMovies.map((movie) => (
             <MovieCard
               key={movie.id}
               id={movie.id}
@@ -142,6 +165,10 @@ function App() {
               onAddDialogue={(movieId) => handleAddDialogue(movieId)}
             />
           ))
+        ) : searchQuery.trim() ? (
+          <p className="empty-text">
+            No movies match "{searchQuery}". Try a different search.
+          </p>
         ) : (
           <p className="empty-text">
             No movies yet. Be the first to add one!

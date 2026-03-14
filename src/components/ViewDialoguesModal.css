@@ -60,11 +60,44 @@
 
 /* ─── Dialogue Card ─── */
 .dlg-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   padding: 18px 20px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 14px;
   border-left: 4px solid #0f172a;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dlg-card-content {
+  flex: 1;
+}
+
+/* ─── Favourite Star ─── */
+.dlg-fav-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, color 0.15s ease;
+}
+
+.dlg-fav-btn:hover {
+  transform: scale(1.2);
+  color: #f59e0b;
+}
+
+.dlg-fav-btn.dlg-fav-active {
+  color: #f59e0b;
+}
+
+.dlg-fav-btn.dlg-fav-active:hover {
+  color: #d97706;
 }
 
 .dlg-card:hover {
