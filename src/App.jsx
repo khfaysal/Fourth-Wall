@@ -231,8 +231,8 @@ function App() {
       <footer className="app-footer">
         <p>
           Created by <strong>Kamrul Hasan</strong> ·{" "}
-          <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">GitHub</a> ·{" "}
-          <a href="mailto:k.hasanfaysal@gmail.com" className="email-badge">Gmail</a>
+          <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">Github</a> ·{" "}
+          <a href="mailto:k.hasanfaysal@gmail.com">Gmail</a>
         </p>
       </footer>
     </div>

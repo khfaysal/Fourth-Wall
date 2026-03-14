@@ -61,7 +61,7 @@ export default function AddDialogueModal({ onClose, onDialogueAdded, preselected
       if (onDialogueAdded) onDialogueAdded();
     } catch (err) {
       console.error("Failed to add dialogue:", err);
-      setError("Failed to submit dialogue. Please try again.");
+      setError(err.message || "Failed to submit dialogue. Please try again.");
     } finally {
       setBusy(false);
     }
