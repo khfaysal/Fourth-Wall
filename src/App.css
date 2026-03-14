@@ -246,6 +246,38 @@
   font-size: 48px;
 }
 
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 40px 24px;
+  margin-top: 40px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.app-footer p {
+  margin: 0 0 8px;
+}
+
+.app-footer a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.app-footer a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.app-footer .footer-credit {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 12px;
+}
+
 @media (max-width: 960px) {
   .hero {
     grid-template-columns: 1fr;

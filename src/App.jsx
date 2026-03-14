@@ -5,6 +5,7 @@ import AddMovieModal from "./components/AddMovieModal";
 import AddDialogueModal from "./components/AddDialogueModal";
 import ViewDialoguesModal from "./components/ViewDialoguesModal";
 import AdminPanel from "./components/AdminPanel";
+import ContributionGuideModal from "./components/ContributionGuideModal";
 import { useAuth } from "./contexts/AuthContext";
 import { isFirebaseConfigured } from "./firebase";
 import { getApprovedMovies, getApprovedMovieCount, getPendingMovieCount } from "./services/movieService";
@@ -24,6 +25,7 @@ function App() {
   const [showAddMovie, setShowAddMovie] = useState(false);
   const [showAddDialogue, setShowAddDialogue] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [viewingMovie, setViewingMovie] = useState(null); // { id, name }
   const [dialogueMovieId, setDialogueMovieId] = useState(""); // pre-selected movie for AddDialogueModal
 
@@ -187,7 +189,7 @@ function App() {
           ) : (
             <button className="primary" onClick={handleGoogleLogin}>Log in with Google</button>
           )}
-          <button className="ghost">See contribution guide</button>
+          <button className="ghost" onClick={() => setShowGuide(true)}>See contribution guide</button>
         </div>
       </section>
 
@@ -222,6 +224,18 @@ function App() {
           onContentChanged={() => fetchData()}
         />
       )}
+      {showGuide && (
+        <ContributionGuideModal onClose={() => setShowGuide(false)} />
+      )}
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <p>
+          Created by <strong>Kamrul Hasan</strong> ·{" "}
+          <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">GitHub</a> ·{" "}
+          <a href="mailto:k.hasanfaysal@gmail.com">k.hasanfaysal@gmail.com</a>
+        </p>
+      </footer>
     </div>
   );
 }
