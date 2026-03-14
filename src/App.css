@@ -272,6 +272,23 @@
   text-decoration: underline;
 }
 
+.email-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  color: #0f172a !important;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none !important;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.15s ease !important;
+}
+
+.email-badge:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
 .app-footer .footer-credit {
   font-size: 13px;
   color: #94a3b8;

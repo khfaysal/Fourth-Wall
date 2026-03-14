@@ -114,8 +114,7 @@ function App() {
           <p className="eyebrow">Community-driven movie dialogue hub</p>
           <h1>Curate iconic lines together.</h1>
           <p className="lede">
-            Browse memorable quotes, submit your favorites, and let admins keep the
-            quality high. Start by searching or exploring popular titles.
+            Discover iconic lines from your favorite movies and series, and contribute new dialogues with the characters who made them unforgettable.
           </p>
           <div className="hero-actions">
             <button className="primary" onClick={handleAddMovie}>Add a movie</button>
@@ -233,7 +232,7 @@ function App() {
         <p>
           Created by <strong>Kamrul Hasan</strong> ·{" "}
           <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">GitHub</a> ·{" "}
-          <a href="mailto:k.hasanfaysal@gmail.com">k.hasanfaysal@gmail.com</a>
+          <a href="mailto:k.hasanfaysal@gmail.com" className="email-badge">Gmail</a>
         </p>
       </footer>
     </div>
