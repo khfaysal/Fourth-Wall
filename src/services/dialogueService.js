@@ -22,7 +22,6 @@ export async function addDialogue({
   movieId,
   characterName,
   targetCharacter,
-  dialogueType,
   dialogueText,
   createdBy,
 }) {
@@ -30,7 +29,6 @@ export async function addDialogue({
     movieId,
     characterName,
     targetCharacter: targetCharacter || "",
-    dialogueType: dialogueType || "Serious",
     dialogueText,
     createdBy: createdBy || "anonymous",
     approved: false,

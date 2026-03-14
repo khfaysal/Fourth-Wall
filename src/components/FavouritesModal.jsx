@@ -70,9 +70,6 @@ export default function FavouritesModal({ onClose }) {
                       {fav.movieName && (
                         <span className="fav-movie">· {fav.movieName}</span>
                       )}
-                      <span className={`fav-type fav-type--${fav.dialogueType?.toLowerCase()}`}>
-                        {fav.dialogueType}
-                      </span>
                     </div>
                   </div>
                   <button

@@ -148,22 +148,6 @@
   color: #64748b;
 }
 
-.dlg-type {
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-left: auto;
-}
-
-.dlg-type--funny { background: #fef3c7; color: #92400e; }
-.dlg-type--serious { background: #e0e7ff; color: #3730a3; }
-.dlg-type--motivation { background: #d1fae5; color: #065f46; }
-.dlg-type--romantic { background: #fce7f3; color: #9d174d; }
-.dlg-type--slang { background: #f3e8ff; color: #6b21a8; }
-
 /* ─── Footer ─── */
 .dlg-footer {
   padding: 16px 28px;

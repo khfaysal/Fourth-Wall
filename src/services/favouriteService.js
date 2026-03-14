@@ -25,7 +25,6 @@ export async function toggleFavourite(uid, dialogue) {
       dialogueText: dialogue.dialogueText,
       characterName: dialogue.characterName,
       targetCharacter: dialogue.targetCharacter || "",
-      dialogueType: dialogue.dialogueType || "",
       movieId: dialogue.movieId || "",
       movieName: dialogue.movieName || "",
       favouritedAt: new Date(),

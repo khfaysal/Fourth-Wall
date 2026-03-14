@@ -101,8 +101,8 @@ function App() {
   // Client-side search filter by movie name
   const filteredMovies = searchQuery.trim()
     ? movies.filter((m) =>
-        (m.movieName || "").toLowerCase().includes(searchQuery.trim().toLowerCase())
-      )
+      (m.movieName || "").toLowerCase().includes(searchQuery.trim().toLowerCase())
+    )
     : movies;
 
   return (
@@ -141,14 +141,6 @@ function App() {
           )}
         </div>
       </header>
-
-      <section className="filters">
-        <span className="pill active">All</span>
-        <span className="pill">Romantic</span>
-        <span className="pill">Serious</span>
-        <span className="pill">Funny</span>
-        <span className="pill">Motivation</span>
-      </section>
 
       <section className="grid">
         {loading ? (
@@ -230,10 +222,13 @@ function App() {
       {/* Footer */}
       <footer className="app-footer">
         <p>
-          Created by <strong>Kamrul Hasan</strong> ·{" "}
-          <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">Github</a> ·{" "}
-          <a href="mailto:k.hasanfaysal@gmail.com">Gmail</a>
+          Created by <strong><span>Kamrul Hasan</span></strong>
         </p>
+        <div className="footer-links">
+          <a href="https://github.com/khfaysal" target="_blank" rel="noopener noreferrer">Github</a>
+          <a href="https://www.linkedin.com/in/kamrulhasanfaysal/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <a href="mailto:k.hasanfaysal@gmail.com">Gmail</a>
+        </div>
       </footer>
     </div>
   );

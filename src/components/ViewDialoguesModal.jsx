@@ -92,9 +92,6 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
                       {dlg.targetCharacter && (
                         <span className="dlg-target"> to {dlg.targetCharacter}</span>
                       )}
-                      <span className={`dlg-type dlg-type--${dlg.dialogueType?.toLowerCase()}`}>
-                        {dlg.dialogueType}
-                      </span>
                     </div>
                   </div>
                   <button

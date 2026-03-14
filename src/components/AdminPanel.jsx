@@ -181,8 +181,6 @@ export default function AdminPanel({ onClose, onContentChanged }) {
                           <span className="admin-meta">
                             — {dlg.characterName}
                             {dlg.targetCharacter ? ` to ${dlg.targetCharacter}` : ""}
-                            {" · "}
-                            {dlg.dialogueType}
                           </span>
                         </div>
                       </div>

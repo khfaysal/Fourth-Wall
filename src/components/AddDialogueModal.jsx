@@ -11,7 +11,6 @@ export default function AddDialogueModal({ onClose, onDialogueAdded, preselected
   const [movieId, setMovieId] = useState(preselectedMovieId || "");
   const [characterName, setCharacterName] = useState("");
   const [targetCharacter, setTargetCharacter] = useState("");
-  const [dialogueType, setDialogueType] = useState("Serious");
   const [dialogueText, setDialogueText] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -50,7 +49,6 @@ export default function AddDialogueModal({ onClose, onDialogueAdded, preselected
         movieId,
         characterName: characterName.trim(),
         targetCharacter: targetCharacter.trim(),
-        dialogueType,
         dialogueText: dialogueText.trim(),
         createdBy: currentUser.uid,
       });
@@ -115,22 +113,6 @@ export default function AddDialogueModal({ onClose, onDialogueAdded, preselected
               value={targetCharacter}
               onChange={(e) => setTargetCharacter(e.target.value)}
             />
-          </div>
-
-          <div className="auth-field">
-            <label htmlFor="dlg-type">Dialogue type</label>
-            <select
-              id="dlg-type"
-              className="auth-select"
-              value={dialogueType}
-              onChange={(e) => setDialogueType(e.target.value)}
-            >
-              <option value="Funny">Funny</option>
-              <option value="Serious">Serious</option>
-              <option value="Motivation">Motivation</option>
-              <option value="Slang">Slang</option>
-              <option value="Romantic">Romantic</option>
-            </select>
           </div>
 
           <div className="auth-field">
