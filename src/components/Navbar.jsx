@@ -4,6 +4,7 @@ import LoginModal from "./LoginModal";
 import SignUpModal from "./SignUpModal";
 import FavouritesModal from "./FavouritesModal";
 import "./Navbar.css";
+import logo from "../assets/logo.png";
 
 const Navbar = ({ onSearch }) => {
   const { currentUser, logout } = useAuth();
@@ -30,7 +31,8 @@ const Navbar = ({ onSearch }) => {
     <>
       <nav className="navbar">
         <div className="nav-left">
-          <h2 className="logo">FW</h2>
+          <img src={logo} alt="Fourth Wall Logo" className="logo-img" />
+          <h2 className="logo">Fourth Wall</h2>
         </div>
 
         <div className="nav-center">

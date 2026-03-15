@@ -17,6 +17,12 @@
   gap: 12px;
 }
 
+.logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
 .logo {
   color: black;
   font-weight: 800;
