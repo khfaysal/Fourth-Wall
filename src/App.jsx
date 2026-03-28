@@ -118,9 +118,8 @@ function App() {
           </p>
           <div className="hero-actions">
             <button className="primary" onClick={handleAddMovie}>Add a movie</button>
-            <button className="ghost" onClick={handleAddDialogue}>Submit a dialogue</button>
             {isAdmin && (
-              <button className="ghost" onClick={() => setShowAdmin(true)}>See pending queue</button>
+              <button className="admin-btn" onClick={() => setShowAdmin(true)}>See pending queue</button>
             )}
           </div>
         </div>

@@ -104,3 +104,11 @@ export async function getMovieById(movieId) {
   }
   return null;
 }
+
+/**
+ * Update an existing movie.
+ */
+export async function updateMovie(movieId, data) {
+  const ref = doc(db, COLLECTION, movieId);
+  return updateDoc(ref, data);
+}

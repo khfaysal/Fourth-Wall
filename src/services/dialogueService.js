@@ -113,3 +113,26 @@ export async function deleteDialogue(dialogueId) {
   const ref = doc(db, COLLECTION, dialogueId);
   return deleteDoc(ref);
 }
+
+/**
+ * Update an existing dialogue.
+ */
+export async function updateDialogue(dialogueId, data) {
+  const ref = doc(db, COLLECTION, dialogueId);
+  return updateDoc(ref, data);
+}
+
+/**
+ * Get all approved dialogues (for Admin Panel processing).
+ */
+export async function getAllApprovedDialogues() {
+  const q = query(
+    collection(db, COLLECTION),
+    where("approved", "==", true)
+  );
+  const snapshot = await getDocs(q);
+  const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  
+  // Sort by createdAt descending on the client to avoid needing a composite index
+  return list.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+}
