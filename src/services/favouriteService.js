@@ -4,33 +4,31 @@ import {
   setDoc,
   deleteDoc,
   getDocs,
-  getDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
 /**
- * Toggle a dialogue as favourite for a user.
- * Stores the full dialogue data so we can display it in the favourites modal.
+ * Add a dialogue to the user's favourites.
  */
-export async function toggleFavourite(uid, dialogue) {
+export async function addFavourite(uid, dialogue) {
   const ref = doc(db, "users", uid, "favourites", dialogue.id);
-  const snap = await getDoc(ref);
+  await setDoc(ref, {
+    dialogueId: dialogue.id,
+    dialogueText: dialogue.dialogueText,
+    characterName: dialogue.characterName,
+    targetCharacter: dialogue.targetCharacter || "",
+    movieId: dialogue.movieId || "",
+    movieName: dialogue.movieName || "",
+    favouritedAt: new Date(),
+  });
+}
 
-  if (snap.exists()) {
-    await deleteDoc(ref);
-    return false; // un-favourited
-  } else {
-    await setDoc(ref, {
-      dialogueId: dialogue.id,
-      dialogueText: dialogue.dialogueText,
-      characterName: dialogue.characterName,
-      targetCharacter: dialogue.targetCharacter || "",
-      movieId: dialogue.movieId || "",
-      movieName: dialogue.movieName || "",
-      favouritedAt: new Date(),
-    });
-    return true; // favourited
-  }
+/**
+ * Remove a dialogue from the user's favourites.
+ */
+export async function removeFavourite(uid, dialogueId) {
+  const ref = doc(db, "users", uid, "favourites", dialogueId);
+  await deleteDoc(ref);
 }
 
 /**
@@ -39,15 +37,6 @@ export async function toggleFavourite(uid, dialogue) {
 export async function getFavourites(uid) {
   const snap = await getDocs(collection(db, "users", uid, "favourites"));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
-
-/**
- * Check if a specific dialogue is favourited by the user.
- */
-export async function isFavourited(uid, dialogueId) {
-  const ref = doc(db, "users", uid, "favourites", dialogueId);
-  const snap = await getDoc(ref);
-  return snap.exists();
 }
 
 /**

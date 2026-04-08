@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { isFirebaseConfigured } from "../firebase";
-import { getFavourites, toggleFavourite } from "../services/favouriteService";
+import { getFavourites, removeFavourite } from "../services/favouriteService";
 import "./FavouritesModal.css";
 
 export default function FavouritesModal({ onClose }) {
@@ -27,10 +27,11 @@ export default function FavouritesModal({ onClose }) {
 
   async function handleRemove(fav) {
     try {
-      await toggleFavourite(currentUser.uid, { id: fav.id });
+      await removeFavourite(currentUser.uid, fav.id);
       setFavourites((prev) => prev.filter((f) => f.id !== fav.id));
     } catch (err) {
       console.error("Failed to remove favourite:", err);
+      alert("Failed to remove favourite. Please try again.");
     }
   }
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { isFirebaseConfigured } from "../firebase";
 import { getApprovedDialogues } from "../services/dialogueService";
-import { toggleFavourite, getFavouriteIds } from "../services/favouriteService";
+import { addFavourite, removeFavourite, getFavouriteIds } from "../services/favouriteService";
 import "./ViewDialoguesModal.css";
 
 export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddDialogue }) {
@@ -10,6 +10,8 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
   const [dialogues, setDialogues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favIds, setFavIds] = useState(new Set());
+  const [togglingIds, setTogglingIds] = useState(new Set()); // track in-progress toggles
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !movieId) return;
@@ -21,8 +23,13 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
 
         // Load favourite IDs for current user
         if (currentUser) {
-          const ids = await getFavouriteIds(currentUser.uid);
-          setFavIds(ids);
+          try {
+            const ids = await getFavouriteIds(currentUser.uid);
+            setFavIds(ids);
+          } catch (favErr) {
+            console.error("Failed to fetch favourite IDs:", favErr);
+            // Don't block dialogues from showing if favourites fail
+          }
         }
       } catch (err) {
         console.error("Failed to fetch dialogues:", err);
@@ -38,16 +45,53 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
       alert("Please log in to favourite dialogues.");
       return;
     }
+
+    // Prevent double-clicks
+    if (togglingIds.has(dlg.id)) return;
+
+    setTogglingIds((prev) => new Set(prev).add(dlg.id));
+    setError(null);
+
     try {
-      const added = await toggleFavourite(currentUser.uid, { ...dlg, movieName });
+      const isFav = favIds.has(dlg.id);
+
+      // Optimistic update: update UI immediately
       setFavIds((prev) => {
         const next = new Set(prev);
-        if (added) next.add(dlg.id);
-        else next.delete(dlg.id);
+        if (isFav) next.delete(dlg.id);
+        else next.add(dlg.id);
         return next;
       });
+
+      try {
+        if (isFav) {
+          await removeFavourite(currentUser.uid, dlg.id);
+        } else {
+          await addFavourite(currentUser.uid, { ...dlg, movieName });
+        }
+      } catch (innerErr) {
+        // Revert optimistic update on failure
+        setFavIds((prev) => {
+          const next = new Set(prev);
+          if (isFav) next.add(dlg.id);
+          else next.delete(dlg.id);
+          return next;
+        });
+        throw innerErr; // re-throw so outer catch handles it
+      }
     } catch (err) {
       console.error("Failed to toggle favourite:", err);
+      if (err.code === "permission-denied" || err.message?.includes("permissions")) {
+        setError("Permission denied. Please make sure Firestore rules allow favourites access.");
+      } else {
+        setError("Failed to update favourite. Please try again.");
+      }
+    } finally {
+      setTogglingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(dlg.id);
+        return next;
+      });
     }
   }
 
@@ -63,6 +107,12 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
           </div>
           <button className="auth-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
+
+        {error && (
+          <div className="dlg-error">
+            ⚠️ {error}
+          </div>
+        )}
 
         <div className="dlg-body">
           {loading ? (
@@ -95,12 +145,13 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
                     </div>
                   </div>
                   <button
-                    className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""}`}
+                    className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""} ${togglingIds.has(dlg.id) ? "dlg-fav-loading" : ""}`}
                     onClick={() => handleToggleFav(dlg)}
+                    disabled={togglingIds.has(dlg.id)}
                     title={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
                     aria-label={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
                   >
-                    {favIds.has(dlg.id) ? "★" : "☆"}
+                    {togglingIds.has(dlg.id) ? "⏳" : favIds.has(dlg.id) ? "★" : "☆"}
                   </button>
                 </div>
               ))}

@@ -197,3 +197,24 @@
     max-height: 90vh;
   }
 }
+
+/* ─── Error Banner ─── */
+.dlg-error {
+  padding: 10px 28px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+  border-bottom: 1px solid #fecaca;
+}
+
+/* ─── Fav Loading State ─── */
+.dlg-fav-btn.dlg-fav-loading {
+  opacity: 0.6;
+  cursor: wait;
+  animation: pulse-fav 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-fav {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
