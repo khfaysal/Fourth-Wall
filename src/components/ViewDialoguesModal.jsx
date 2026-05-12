@@ -1,9 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { isFirebaseConfigured } from "../firebase";
 import { getApprovedDialogues } from "../services/dialogueService";
 import { addFavourite, removeFavourite, getFavouriteIds } from "../services/favouriteService";
 import "./ViewDialoguesModal.css";
+
+/**
+ * Group dialogues by characterName, preserving original order within each group.
+ * Characters appear in the order their first dialogue was encountered.
+ * Returns an array of { character, dialogues[] } groups.
+ */
+function groupByCharacter(dialogues) {
+  const groupMap = new Map(); // preserves insertion order
+  for (const dlg of dialogues) {
+    const key = (dlg.characterName || "Unknown").trim();
+    if (!groupMap.has(key)) {
+      groupMap.set(key, []);
+    }
+    groupMap.get(key).push(dlg);
+  }
+  return Array.from(groupMap.entries()).map(([character, dialogues]) => ({
+    character,
+    dialogues,
+  }));
+}
 
 export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddDialogue }) {
   const { currentUser } = useAuth();
@@ -12,6 +32,18 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
   const [favIds, setFavIds] = useState(new Set());
   const [togglingIds, setTogglingIds] = useState(new Set()); // track in-progress toggles
   const [error, setError] = useState(null);
+
+  // Group dialogues by character so same-character dialogues appear sequentially
+  const groupedDialogues = useMemo(() => groupByCharacter(dialogues), [dialogues]);
+
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !movieId) return;
@@ -102,7 +134,9 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
           <div>
             <h2>{movieName}</h2>
             <p className="dlg-subtitle">
-              {loading ? "Loading…" : `${dialogues.length} dialogue${dialogues.length !== 1 ? "s" : ""}`}
+              {loading
+                ? "Loading…"
+                : `${dialogues.length} dialogue${dialogues.length !== 1 ? "s" : ""} · ${groupedDialogues.length} character${groupedDialogues.length !== 1 ? "s" : ""}`}
             </p>
           </div>
           <button className="auth-close" onClick={onClose} aria-label="Close">✕</button>
@@ -129,30 +163,48 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
             </div>
           ) : (
             <div className="dlg-list">
-              {dialogues.map((dlg) => (
-                <div key={dlg.id} className="dlg-card">
-                  <div className="dlg-card-content">
-                    <div className="dlg-quote">
-                      <span className="dlg-open-quote">"</span>
-                      {dlg.dialogueText}
-                      <span className="dlg-close-quote">"</span>
-                    </div>
-                    <div className="dlg-meta">
-                      <span className="dlg-character">— {dlg.characterName}</span>
-                      {dlg.targetCharacter && (
-                        <span className="dlg-target"> to {dlg.targetCharacter}</span>
-                      )}
+              {groupedDialogues.map((group) => (
+                <div key={group.character} className="dlg-character-group">
+                  <div className="dlg-group-header">
+                    <span className="dlg-group-avatar">
+                      {group.character.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="dlg-group-info">
+                      <span className="dlg-group-name">{group.character}</span>
+                      <span className="dlg-group-count">
+                        {group.dialogues.length} dialogue{group.dialogues.length !== 1 ? "s" : ""}
+                      </span>
                     </div>
                   </div>
-                  <button
-                    className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""} ${togglingIds.has(dlg.id) ? "dlg-fav-loading" : ""}`}
-                    onClick={() => handleToggleFav(dlg)}
-                    disabled={togglingIds.has(dlg.id)}
-                    title={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
-                    aria-label={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
-                  >
-                    {togglingIds.has(dlg.id) ? "⏳" : favIds.has(dlg.id) ? "★" : "☆"}
-                  </button>
+
+                  {group.dialogues.map((dlg, idx) => (
+                    <div
+                      key={dlg.id}
+                      className={`dlg-card ${idx === group.dialogues.length - 1 ? "dlg-card-last" : ""}`}
+                    >
+                      <div className="dlg-card-content">
+                        <div className="dlg-quote">
+                          <span className="dlg-open-quote">"</span>
+                          {dlg.dialogueText}
+                          <span className="dlg-close-quote">"</span>
+                        </div>
+                        <div className="dlg-meta">
+                          {dlg.targetCharacter && (
+                            <span className="dlg-target">→ to {dlg.targetCharacter}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""} ${togglingIds.has(dlg.id) ? "dlg-fav-loading" : ""}`}
+                        onClick={() => handleToggleFav(dlg)}
+                        disabled={togglingIds.has(dlg.id)}
+                        title={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
+                        aria-label={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
+                      >
+                        {togglingIds.has(dlg.id) ? "⏳" : favIds.has(dlg.id) ? "★" : "☆"}
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
