@@ -36,14 +36,6 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
   // Group dialogues by character so same-character dialogues appear sequentially
   const groupedDialogues = useMemo(() => groupByCharacter(dialogues), [dialogues]);
 
-  // Lock background scroll while modal is open
-  useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !movieId) return;

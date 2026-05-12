@@ -29,6 +29,17 @@ function App() {
   const [viewingMovie, setViewingMovie] = useState(null); // { id, name }
   const [dialogueMovieId, setDialogueMovieId] = useState(""); // pre-selected movie for AddDialogueModal
 
+  // Lock background scroll when any modal is open
+  const anyModalOpen = showAddMovie || showAddDialogue || !!viewingMovie || showAdmin || showGuide;
+  useEffect(() => {
+    if (anyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [anyModalOpen]);
+
   // Fetch approved movies from Firestore
   useEffect(() => {
     if (!isFirebaseConfigured) return;

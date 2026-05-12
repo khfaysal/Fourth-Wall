@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import LoginModal from "./LoginModal";
 import SignUpModal from "./SignUpModal";
@@ -9,6 +9,16 @@ import logo from "../assets/logo.png";
 const Navbar = ({ onSearch }) => {
   const { currentUser, logout } = useAuth();
   const [modal, setModal] = useState(null); // null | "login" | "signup" | "favourites"
+
+  // Lock background scroll when any navbar modal is open
+  useEffect(() => {
+    if (modal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [modal]);
 
   function openLogin() { setModal("login"); }
   function openSignUp() { setModal("signup"); }
