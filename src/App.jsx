@@ -24,13 +24,13 @@ function App() {
   const isAdmin = currentUser && adminEmails.includes(currentUser.email?.toLowerCase());
   const [showAddMovie, setShowAddMovie] = useState(false);
   const [showAddDialogue, setShowAddDialogue] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminMode, setAdminMode] = useState(null); // 'pending' | 'edit' | null
   const [showGuide, setShowGuide] = useState(false);
   const [viewingMovie, setViewingMovie] = useState(null); // { id, name }
   const [dialogueMovieId, setDialogueMovieId] = useState(""); // pre-selected movie for AddDialogueModal
 
   // Lock background scroll when any modal is open
-  const anyModalOpen = showAddMovie || showAddDialogue || !!viewingMovie || showAdmin || showGuide;
+  const anyModalOpen = showAddMovie || showAddDialogue || !!viewingMovie || !!adminMode || showGuide;
   useEffect(() => {
     if (anyModalOpen) {
       document.body.style.overflow = "hidden";
@@ -130,7 +130,10 @@ function App() {
           <div className="hero-actions">
             <button className="primary" onClick={handleAddMovie}>Add a movie</button>
             {isAdmin && (
-              <button className="admin-btn" onClick={() => setShowAdmin(true)}>See pending queue</button>
+              <>
+                <button className="admin-btn" onClick={() => setAdminMode("pending")}>See pending queue</button>
+                <button className="admin-btn" onClick={() => setAdminMode("edit")}>Edit</button>
+              </>
             )}
           </div>
         </div>
@@ -219,9 +222,10 @@ function App() {
           }}
         />
       )}
-      {showAdmin && (
+      {adminMode && (
         <AdminPanel
-          onClose={() => setShowAdmin(false)}
+          mode={adminMode}
+          onClose={() => setAdminMode(null)}
           onContentChanged={() => fetchData()}
         />
       )}

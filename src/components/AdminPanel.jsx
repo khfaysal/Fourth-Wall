@@ -7,9 +7,9 @@ import EditMovieModal from "./EditMovieModal";
 import EditDialogueModal from "./EditDialogueModal";
 import "./AdminPanel.css";
 
-export default function AdminPanel({ onClose, onContentChanged }) {
+export default function AdminPanel({ mode = "pending", onClose, onContentChanged }) {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState(mode === "pending" ? "pending-movie" : "movie");
   const [pendingMovies, setPendingMovies] = useState([]);
   const [pendingDialogues, setPendingDialogues] = useState([]);
   const [approvedMovies, setApprovedMovies] = useState([]);
@@ -23,10 +23,13 @@ export default function AdminPanel({ onClose, onContentChanged }) {
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
-    if (activeTab === "pending") fetchPending();
-    else if (activeTab === "movies") fetchApprovedMovies();
-    else if (activeTab === "dialogues") fetchApprovedDialogues();
-  }, [activeTab]);
+    if (mode === "pending") {
+      fetchPending();
+    } else {
+      if (activeTab === "movie") fetchApprovedMovies();
+      else if (activeTab === "dialogue") fetchApprovedDialogues();
+    }
+  }, [activeTab, mode]);
 
   async function fetchPending() {
     setLoading(true);
@@ -132,149 +135,161 @@ export default function AdminPanel({ onClose, onContentChanged }) {
     }
   }
 
-  const totalPending = pendingMovies.length + pendingDialogues.length;
-
   return (
     <>
       <div className="admin-overlay" onClick={onClose}>
         <div className="admin-panel" onClick={(e) => e.stopPropagation()}>
           <div className="admin-header" style={{ borderBottom: "none", paddingBottom: 0 }}>
             <div>
-              <h2>Admin Dashboard</h2>
+              <h2>{mode === "pending" ? "Pending Queue" : "Edit Content"}</h2>
               <p className="admin-subtitle">
-                Manage all movies and dialogues.
+                {mode === "pending" 
+                  ? "Review and approve movie and dialogue submissions."
+                  : "Modify or delete approved movies and dialogues."}
               </p>
             </div>
             <button className="auth-close" onClick={onClose} aria-label="Close">✕</button>
           </div>
 
           <div className="admin-tabs" style={{ display: 'flex', borderBottom: '1px solid #333', margin: '0 24px 24px', gap: '16px' }}>
-            <button 
-              style={{ background: 'none', border: 'none', color: activeTab === 'pending' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'pending' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
-              onClick={() => setActiveTab('pending')}
-            >
-              Pending ({totalPending})
-            </button>
-            <button 
-              style={{ background: 'none', border: 'none', color: activeTab === 'movies' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'movies' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
-              onClick={() => setActiveTab('movies')}
-            >
-              Movies
-            </button>
-            <button 
-              style={{ background: 'none', border: 'none', color: activeTab === 'dialogues' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'dialogues' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
-              onClick={() => setActiveTab('dialogues')}
-            >
-              Dialogues
-            </button>
+            {mode === "pending" ? (
+              <>
+                <button 
+                  style={{ background: 'none', border: 'none', color: activeTab === 'pending-movie' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'pending-movie' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => setActiveTab('pending-movie')}
+                >
+                  Movie ({pendingMovies.length})
+                </button>
+                <button 
+                  style={{ background: 'none', border: 'none', color: activeTab === 'pending-dialogue' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'pending-dialogue' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => setActiveTab('pending-dialogue')}
+                >
+                  Dialogue ({pendingDialogues.length})
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  style={{ background: 'none', border: 'none', color: activeTab === 'movie' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'movie' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => setActiveTab('movie')}
+                >
+                  Movie
+                </button>
+                <button 
+                  style={{ background: 'none', border: 'none', color: activeTab === 'dialogue' ? 'var(--primary)' : '#aaa', padding: '12px 0', borderBottom: activeTab === 'dialogue' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: 600 }}
+                  onClick={() => setActiveTab('dialogue')}
+                >
+                  Dialogue
+                </button>
+              </>
+            )}
           </div>
 
           <div className="admin-content" style={{ flex: 1, overflowY: 'auto' }}>
-            {activeTab === "pending" && (
+            {mode === "pending" && activeTab === "pending-movie" && (
               loading ? (
-                <div className="admin-loading">Loading pending items…</div>
-              ) : totalPending === 0 ? (
+                <div className="admin-loading">Loading pending movies…</div>
+              ) : pendingMovies.length === 0 ? (
                 <div className="admin-empty">
-                  <span className="admin-empty-icon">✅</span>
-                  <p>All caught up! No pending submissions.</p>
+                  <span className="admin-empty-icon">🎬</span>
+                  <p>No pending movie submissions.</p>
                 </div>
               ) : (
                 <div className="admin-sections">
-                  {/* Pending Movies */}
-                  {pendingMovies.length > 0 && (
-                    <section className="admin-section">
-                      <h3 className="admin-section-title">
-                        🎬 Pending Movies
-                        <span className="admin-badge">{pendingMovies.length}</span>
-                      </h3>
-                      <div className="admin-list">
-                        {pendingMovies.map((movie) => (
-                          <div key={movie.id} className="admin-item">
-                            <div className="admin-item-info">
-                              {movie.bannerURL && (
-                                <img
-                                  src={movie.bannerURL}
-                                  alt={movie.movieName}
-                                  className="admin-thumb"
-                                  onError={(e) => { e.target.style.display = "none"; }}
-                                />
-                              )}
-                              <div>
-                                <strong>{movie.movieName}</strong>
-                                <span className="admin-meta">
-                                  Submitted {movie.createdAt?.toDate?.()
-                                    ? new Date(movie.createdAt.toDate()).toLocaleDateString()
-                                    : "recently"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="admin-actions">
-                              <button
-                                className="admin-approve"
-                                onClick={() => handleApproveMovie(movie.id)}
-                                disabled={actionBusy === movie.id}
-                              >
-                                {actionBusy === movie.id ? "…" : "✓ Approve"}
-                              </button>
-                              <button
-                                className="admin-reject"
-                                onClick={() => handleDeleteMovie(movie.id, false)}
-                                disabled={actionBusy === movie.id}
-                              >
-                                ✕ Reject
-                              </button>
+                  <section className="admin-section">
+                    <div className="admin-list">
+                      {pendingMovies.map((movie) => (
+                        <div key={movie.id} className="admin-item">
+                          <div className="admin-item-info">
+                            {movie.bannerURL && (
+                              <img
+                                src={movie.bannerURL}
+                                alt={movie.movieName}
+                                className="admin-thumb"
+                                onError={(e) => { e.target.style.display = "none"; }}
+                              />
+                            )}
+                            <div>
+                              <strong>{movie.movieName}</strong>
+                              <span className="admin-meta">
+                                Submitted {movie.createdAt?.toDate?.()
+                                  ? new Date(movie.createdAt.toDate()).toLocaleDateString()
+                                  : "recently"}
+                              </span>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  {/* Pending Dialogues */}
-                  {pendingDialogues.length > 0 && (
-                    <section className="admin-section">
-                      <h3 className="admin-section-title">
-                        💬 Pending Dialogues
-                        <span className="admin-badge">{pendingDialogues.length}</span>
-                      </h3>
-                      <div className="admin-list">
-                        {pendingDialogues.map((dlg) => (
-                          <div key={dlg.id} className="admin-item">
-                            <div className="admin-item-info">
-                              <div>
-                                <strong>"{dlg.dialogueText}"</strong>
-                                <span className="admin-meta">
-                                  — {dlg.characterName}
-                                  {dlg.targetCharacter ? ` to ${dlg.targetCharacter}` : ""}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="admin-actions">
-                              <button
-                                className="admin-approve"
-                                onClick={() => handleApproveDialogue(dlg.id)}
-                                disabled={actionBusy === dlg.id}
-                              >
-                                {actionBusy === dlg.id ? "…" : "✓ Approve"}
-                              </button>
-                              <button
-                                className="admin-reject"
-                                onClick={() => handleDeleteDialogue(dlg.id, false)}
-                                disabled={actionBusy === dlg.id}
-                              >
-                                ✕ Reject
-                              </button>
-                            </div>
+                          <div className="admin-actions">
+                            <button
+                              className="admin-approve"
+                              onClick={() => handleApproveMovie(movie.id)}
+                              disabled={actionBusy === movie.id}
+                            >
+                              {actionBusy === movie.id ? "…" : "✓ Approve"}
+                            </button>
+                            <button
+                              className="admin-reject"
+                              onClick={() => handleDeleteMovie(movie.id, false)}
+                              disabled={actionBusy === movie.id}
+                            >
+                              ✕ Reject
+                            </button>
                           </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
                 </div>
               )
             )}
 
-            {activeTab === "movies" && (
+            {mode === "pending" && activeTab === "pending-dialogue" && (
+              loading ? (
+                <div className="admin-loading">Loading pending dialogues…</div>
+              ) : pendingDialogues.length === 0 ? (
+                <div className="admin-empty">
+                  <span className="admin-empty-icon">💬</span>
+                  <p>No pending dialogue submissions.</p>
+                </div>
+              ) : (
+                <div className="admin-sections">
+                  <section className="admin-section">
+                    <div className="admin-list">
+                      {pendingDialogues.map((dlg) => (
+                        <div key={dlg.id} className="admin-item">
+                          <div className="admin-item-info">
+                            <div>
+                              <strong>"{dlg.dialogueText}"</strong>
+                              <span className="admin-meta">
+                                — {dlg.characterName}
+                                {dlg.targetCharacter ? ` to ${dlg.targetCharacter}` : ""}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="admin-actions">
+                            <button
+                              className="admin-approve"
+                              onClick={() => handleApproveDialogue(dlg.id)}
+                              disabled={actionBusy === dlg.id}
+                            >
+                              {actionBusy === dlg.id ? "…" : "✓ Approve"}
+                            </button>
+                            <button
+                              className="admin-reject"
+                              onClick={() => handleDeleteDialogue(dlg.id, false)}
+                              disabled={actionBusy === dlg.id}
+                            >
+                              ✕ Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              )
+            )}
+
+            {mode === "edit" && activeTab === "movie" && (
               loading ? (
                 <div className="admin-loading">Loading movies…</div>
               ) : approvedMovies.length === 0 ? (
@@ -325,7 +340,7 @@ export default function AdminPanel({ onClose, onContentChanged }) {
               )
             )}
 
-            {activeTab === "dialogues" && (
+            {mode === "edit" && activeTab === "dialogue" && (
               loading ? (
                 <div className="admin-loading">Loading dialogues…</div>
               ) : approvedDialogues.length === 0 ? (
