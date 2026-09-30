@@ -61,7 +61,7 @@
 /* ─── Dialogue Card ─── */
 .dlg-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 18px 20px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -298,4 +298,156 @@
 @keyframes pulse-fav {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* ─── Header Actions (edit toggle + close) ─── */
+.dlg-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Override the global absolute positioning from AuthModals.css
+   so the close button sits inline within the flex header */
+.dlg-header-actions .auth-close {
+  position: static;
+  margin: 0;
+}
+
+.dlg-header-edit-btn {
+  background: none;
+  border: 1px solid transparent;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.dlg-header-edit-btn:hover {
+  background: #f1f5f9;
+  color: #3b82f6;
+  border-color: #e2e8f0;
+}
+
+.dlg-header-edit-btn.dlg-header-edit-active {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #bfdbfe;
+}
+
+/* ─── Edit Mode Bar (below header) ─── */
+.dlg-edit-bar {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #bfdbfe;
+  animation: slideDown 0.15s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dlg-edit-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dlg-edit-bar-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e40af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dlg-edit-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dlg-edit-bar-btn {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dlg-edit-bar-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.dlg-edit-bar-btn.dlg-edit-bar-btn-danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.dlg-edit-bar-btn.dlg-edit-bar-btn-danger:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* ─── Inline Dialogue Card Actions ─── */
+.dlg-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.dlg-inline-edit-btn,
+.dlg-inline-delete-btn {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.dlg-inline-edit-btn:hover {
+  background: #f1f5f9;
+  color: #3b82f6;
+}
+
+.dlg-inline-delete-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.dlg-inline-edit-btn:disabled,
+.dlg-inline-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .dlg-edit-bar-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dlg-edit-bar-actions {
+    width: 100%;
+  }
+
+  .dlg-edit-bar-btn {
+    flex: 1;
+    text-align: center;
+  }
 }

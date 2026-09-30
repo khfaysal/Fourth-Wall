@@ -130,10 +130,7 @@ function App() {
           <div className="hero-actions">
             <button className="primary" onClick={handleAddMovie}>Add a movie</button>
             {isAdmin && (
-              <>
-                <button className="admin-btn" onClick={() => setAdminMode("pending")}>See pending queue</button>
-                <button className="admin-btn" onClick={() => setAdminMode("edit")}>Edit</button>
-              </>
+              <button className="admin-btn" onClick={() => setAdminMode("pending")}>See pending queue</button>
             )}
           </div>
         </div>
@@ -215,11 +212,13 @@ function App() {
         <ViewDialoguesModal
           movieId={viewingMovie.id}
           movieName={viewingMovie.name}
+          isAdmin={isAdmin}
           onClose={() => setViewingMovie(null)}
           onAddDialogue={() => {
             setViewingMovie(null);
             handleAddDialogue(viewingMovie.id);
           }}
+          onContentChanged={() => fetchData()}
         />
       )}
       {adminMode && (

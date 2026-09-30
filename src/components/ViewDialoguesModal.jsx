@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { isFirebaseConfigured } from "../firebase";
-import { getApprovedDialogues } from "../services/dialogueService";
+import { getApprovedDialogues, deleteDialogue } from "../services/dialogueService";
+import { deleteMovie } from "../services/movieService";
 import { addFavourite, removeFavourite, getFavouriteIds } from "../services/favouriteService";
+import EditMovieModal from "./EditMovieModal";
+import EditDialogueModal from "./EditDialogueModal";
 import "./ViewDialoguesModal.css";
 
 /**
@@ -25,13 +28,18 @@ function groupByCharacter(dialogues) {
   }));
 }
 
-export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddDialogue }) {
+export default function ViewDialoguesModal({ movieId, movieName, isAdmin, onClose, onAddDialogue, onContentChanged }) {
   const { currentUser } = useAuth();
   const [dialogues, setDialogues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favIds, setFavIds] = useState(new Set());
   const [togglingIds, setTogglingIds] = useState(new Set()); // track in-progress toggles
   const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editingMovieModal, setEditingMovieModal] = useState(false);
+  const [editingDialogue, setEditingDialogue] = useState(null);
+  const [actionBusy, setActionBusy] = useState(null);
+  const [currentMovieName, setCurrentMovieName] = useState(movieName);
 
   // Group dialogues by character so same-character dialogues appear sequentially
   const groupedDialogues = useMemo(() => groupByCharacter(dialogues), [dialogues]);
@@ -119,20 +127,78 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
     }
   }
 
+  async function handleDeleteDialogue(dialogueId) {
+    if (!window.confirm("Delete this dialogue permanently?")) return;
+    setActionBusy(dialogueId);
+    try {
+      await deleteDialogue(dialogueId);
+      setDialogues((prev) => prev.filter((d) => d.id !== dialogueId));
+      if (onContentChanged) onContentChanged();
+    } catch (err) {
+      console.error("Failed to delete dialogue:", err);
+      setError("Failed to delete dialogue. Check permissions.");
+    } finally {
+      setActionBusy(null);
+    }
+  }
+
+  async function handleDeleteMovie() {
+    if (!window.confirm("Delete this movie and all its dialogues permanently?")) return;
+    try {
+      await deleteMovie(movieId);
+      if (onContentChanged) onContentChanged();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete movie:", err);
+      setError("Failed to delete movie. Check permissions.");
+    }
+  }
+
   return (
+    <>
     <div className="dlg-overlay" onClick={onClose}>
       <div className="dlg-panel" onClick={(e) => e.stopPropagation()}>
         <div className="dlg-header">
           <div>
-            <h2>{movieName}</h2>
+            <h2>{currentMovieName}</h2>
             <p className="dlg-subtitle">
               {loading
                 ? "Loading…"
-                : `${dialogues.length} dialogue${dialogues.length !== 1 ? "s" : ""} · ${groupedDialogues.length} character${groupedDialogues.length !== 1 ? "s" : ""}`}
+                : editMode
+                  ? "Edit mode — modify movie details and dialogues"
+                  : `${dialogues.length} dialogue${dialogues.length !== 1 ? "s" : ""} · ${groupedDialogues.length} character${groupedDialogues.length !== 1 ? "s" : ""}`}
             </p>
           </div>
-          <button className="auth-close" onClick={onClose} aria-label="Close">✕</button>
+          <div className="dlg-header-actions">
+            {isAdmin && (
+              <button
+                className={`dlg-header-edit-btn ${editMode ? "dlg-header-edit-active" : ""}`}
+                onClick={() => setEditMode(!editMode)}
+                title={editMode ? "Exit edit mode" : "Edit"}
+                aria-label={editMode ? "Exit edit mode" : "Edit"}
+              >
+                ✎
+              </button>
+            )}
+            <button className="auth-close" onClick={onClose} aria-label="Close">✕</button>
+          </div>
         </div>
+
+        {editMode && (
+          <div className="dlg-edit-bar">
+            <div className="dlg-edit-bar-row">
+              <span className="dlg-edit-bar-label">Movie</span>
+              <div className="dlg-edit-bar-actions">
+                <button className="dlg-edit-bar-btn" onClick={() => setEditingMovieModal(true)}>
+                  Edit
+                </button>
+                <button className="dlg-edit-bar-btn dlg-edit-bar-btn-danger" onClick={handleDeleteMovie}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="dlg-error">
@@ -186,15 +252,41 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
                           )}
                         </div>
                       </div>
-                      <button
-                        className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""} ${togglingIds.has(dlg.id) ? "dlg-fav-loading" : ""}`}
-                        onClick={() => handleToggleFav(dlg)}
-                        disabled={togglingIds.has(dlg.id)}
-                        title={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
-                        aria-label={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
-                      >
-                        {togglingIds.has(dlg.id) ? "⏳" : favIds.has(dlg.id) ? "★" : "☆"}
-                      </button>
+                      <div className="dlg-card-actions">
+                        {editMode && (
+                          <>
+                            <button
+                              className="dlg-inline-edit-btn"
+                              onClick={() => setEditingDialogue(dlg)}
+                              disabled={actionBusy === dlg.id}
+                              title="Edit dialogue"
+                              aria-label="Edit dialogue"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              className="dlg-inline-delete-btn"
+                              onClick={() => handleDeleteDialogue(dlg.id)}
+                              disabled={actionBusy === dlg.id}
+                              title="Delete dialogue"
+                              aria-label="Delete dialogue"
+                            >
+                              🗑
+                            </button>
+                          </>
+                        )}
+                        {!editMode && (
+                          <button
+                            className={`dlg-fav-btn ${favIds.has(dlg.id) ? "dlg-fav-active" : ""} ${togglingIds.has(dlg.id) ? "dlg-fav-loading" : ""}`}
+                            onClick={() => handleToggleFav(dlg)}
+                            disabled={togglingIds.has(dlg.id)}
+                            title={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
+                            aria-label={favIds.has(dlg.id) ? "Remove from favourites" : "Add to favourites"}
+                          >
+                            {togglingIds.has(dlg.id) ? "⏳" : favIds.has(dlg.id) ? "★" : "☆"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -212,5 +304,30 @@ export default function ViewDialoguesModal({ movieId, movieName, onClose, onAddD
         )}
       </div>
     </div>
+
+    {editingMovieModal && (
+      <EditMovieModal
+        movie={{ id: movieId, movieName: currentMovieName }}
+        onClose={() => setEditingMovieModal(false)}
+        onMovieUpdated={() => {
+          if (onContentChanged) onContentChanged();
+        }}
+      />
+    )}
+
+    {editingDialogue && (
+      <EditDialogueModal
+        dialogue={editingDialogue}
+        onClose={() => setEditingDialogue(null)}
+        onDialogueUpdated={() => {
+          // Re-fetch dialogues to reflect the edit
+          if (isFirebaseConfigured && movieId) {
+            getApprovedDialogues(movieId).then((list) => setDialogues(list)).catch(console.error);
+          }
+          if (onContentChanged) onContentChanged();
+        }}
+      />
+    )}
+    </>
   );
 }
