@@ -118,6 +118,14 @@ function App() {
 
   return (
     <div className="page">
+      <div className={`top-bar ${isAdmin ? 'admin-bar' : 'user-bar'}`}>
+        <div className="marquee-content">
+          <span>{isAdmin ? 'Admin Mode • Review pending queues • Manage movies and dialogues • Keep the community clean • ' : 'Curate your favourite dialogues • Discover iconic quotes • Add your favourite movies • Share with friends • '}</span>
+          <span>{isAdmin ? 'Admin Mode • Review pending queues • Manage movies and dialogues • Keep the community clean • ' : 'Curate your favourite dialogues • Discover iconic quotes • Add your favourite movies • Share with friends • '}</span>
+          <span>{isAdmin ? 'Admin Mode • Review pending queues • Manage movies and dialogues • Keep the community clean • ' : 'Curate your favourite dialogues • Discover iconic quotes • Add your favourite movies • Share with friends • '}</span>
+          <span>{isAdmin ? 'Admin Mode • Review pending queues • Manage movies and dialogues • Keep the community clean • ' : 'Curate your favourite dialogues • Discover iconic quotes • Add your favourite movies • Share with friends • '}</span>
+        </div>
+      </div>
       <Navbar onSearch={setSearchQuery} />
 
       <header className="hero">
